@@ -423,18 +423,17 @@ async function run() {
       }
     );
 
-    //task related APIs//
-    // all
-    // app.get("/tasks", verifyFBToken, async (req, res) => {
-    //   const tasks = await taskCollection
-    //     .find()
-    //     .sort({ completion_date: 1 })
-    //     .toArray();
-    //   res.send(tasks);
-    // });
+    // task related APIs
+    app.get("/tasks", verifyFBToken, async (req, res) => {
+      const tasks = await taskCollection
+        .find()
+        .sort({ completion_date: 1 })
+        .toArray();
+      res.send(tasks);
+    });
 
     // In your server route file (e.g., tasksRoute.js)
-    app.get("/tasks", verifyFBToken, async (req, res) => {
+    app.get("/tasklist", verifyFBToken, async (req, res) => {
       try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 6; // 6 items per page
@@ -446,6 +445,30 @@ async function run() {
         const tasks = await taskCollection
           .find({ required_workers: { $gt: 0 } })
           .sort({ completion_date: 1 })
+          .skip(skip)
+          .limit(limit)
+          .toArray();
+
+        res.send({
+          tasks,
+          totalTasks,
+          totalPages: Math.ceil(totalTasks / limit),
+          currentPage: page,
+        });
+      } catch (error) {
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+    app.get("/manage-tasks", verifyFBToken, verifyAdmin, async (req, res) => {
+      try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 6; // 6 items per page
+        const skip = (page - 1) * limit;
+
+        const totalTasks = await taskCollection.countDocuments();
+        const tasks = await taskCollection
+          .find()
+          .sort({ createdAt: -1 }) // Sort by newest first
           .skip(skip)
           .limit(limit)
           .toArray();
