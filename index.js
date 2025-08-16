@@ -110,6 +110,10 @@ async function run() {
 
 
 
+    app.get('/trendingTask' , async(req, res) => {
+      const result = await taskCollection.find().toArray();
+      res.send(result);
+    })
 
     // nottifications related APIs
     app.post("/notifications", verifyFBToken, async (req, res) => {
