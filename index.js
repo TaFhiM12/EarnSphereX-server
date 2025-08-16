@@ -279,6 +279,31 @@ async function run() {
         res.status(500).send({ message: error.message });
       }
     });
+    app.patch("/usersprofile/:email", verifyFBToken, async (req, res) => {
+      try {
+        const email = req.params.email;
+        const { name, photoURL, bio, skills } = req.body;
+
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (photoURL) updateData.photoURL = photoURL;
+        if (bio) updateData.bio = bio;
+        if (skills) updateData.skills = skills;
+
+        const result = await usersCollection.updateOne(
+          { email },
+          { $set: updateData }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: "User not found" });
+        }
+
+        res.send({ message: "Profile updated successfully" });
+      } catch (error) {
+        res.status(500).send({ message: "Server error" });
+      }
+    });
 
     app.get("/users/:email", async (req, res) => {
       const email = req.params.email;
