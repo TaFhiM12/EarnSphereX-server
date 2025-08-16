@@ -432,19 +432,24 @@ async function run() {
       res.send(tasks);
     });
 
-    // In your server route file (e.g., tasksRoute.js)
     app.get("/tasklist", verifyFBToken, async (req, res) => {
       try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 6; // 6 items per page
+        const limit = parseInt(req.query.limit) || 6;
         const skip = (page - 1) * limit;
+        const sortBy = req.query.sortBy || "completion_date";
+        const sortOrder = req.query.sortOrder === "desc" ? -1 : 1;
 
         const totalTasks = await taskCollection.countDocuments({
           required_workers: { $gt: 0 },
         });
+
+        const sortOption = {};
+        sortOption[sortBy] = sortOrder;
+
         const tasks = await taskCollection
           .find({ required_workers: { $gt: 0 } })
-          .sort({ completion_date: 1 })
+          .sort(sortOption)
           .skip(skip)
           .limit(limit)
           .toArray();
